@@ -1,0 +1,84 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# 💾 Prompt Caching Policies
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Reduces API costs by caching:
+#   - System prompts (security context, personas)
+#   - Tool definitions (MCP tools)
+#   - Conversation messages
+#
+# Supported: AWS Bedrock (Claude 3+, Nova models)
+# Coming soon: Anthropic direct, OpenAI
+#
+---
+# Full Prompt Caching - Cache everything
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: 27-prompt-caching-full
+  namespace: agentgateway-system
+  labels:
+    demo: agentgateway
+    category: caching
+  annotations:
+    description: "Caches system prompts, tools, and messages for cost savings"
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: multi-llm-route
+  backend:
+    ai:
+      promptCaching:
+        cacheSystem: true
+        cacheTools: true
+        cacheMessages: true
+        minTokens: 1024
+---
+# System Prompt Caching Only - For elicitation policies
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: 28-prompt-caching-system-only
+  namespace: agentgateway-system
+  labels:
+    demo: agentgateway
+    category: caching
+  annotations:
+    description: "Caches only system prompts (great for elicitation)"
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: multi-llm-route
+  backend:
+    ai:
+      promptCaching:
+        cacheSystem: true
+        cacheTools: false
+        cacheMessages: false
+        minTokens: 512
+---
+# MCP Tool Caching - Cache tool definitions
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: 29-mcp-tool-caching
+  namespace: agentgateway-system
+  labels:
+    demo: agentgateway
+    category: caching
+  annotations:
+    description: "Caches MCP tool definitions for agent workloads"
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: github-mcp
+  backend:
+    ai:
+      promptCaching:
+        cacheSystem: true
+        cacheTools: true
+        cacheMessages: false
+        minTokens: 1024
